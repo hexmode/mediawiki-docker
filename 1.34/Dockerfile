@@ -21,13 +21,19 @@ RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		libicu-dev \
+		zlib1g-dev \
+		libzip-dev \
+		libxml2-dev \
+		zip \
 	; \
-	\
 	docker-php-ext-install -j "$(nproc)" \
 		intl \
 		mbstring \
 		mysqli \
 		opcache \
+		zip \
+		xml \
+		json \
 	; \
 	\
 	pecl install apcu-5.1.18; \
@@ -74,8 +80,8 @@ RUN { \
 
 # SQLite Directory Setup
 RUN set -eux; \
-	mkdir -p /var/www/data; \
-	chown -R www-data:www-data /var/www/data
+	mkdir -p /var/www/{data,cache}; \
+	chown -R www-data:www-data /var/www/{data,cache}
 
 # Version
 ENV MEDIAWIKI_MAJOR_VERSION 1.34
@@ -85,8 +91,9 @@ ENV MEDIAWIKI_SHA512 b6b1aeec26a1c114eeec0bdf18d4b3160fe02dac2920a39a045acb74e62
 
 # MediaWiki setup
 RUN set -eux; \
+	mkdir -p /var/www/html/w; \
 	curl -fSL "https://releases.wikimedia.org/mediawiki/${MEDIAWIKI_MAJOR_VERSION}/mediawiki-${MEDIAWIKI_VERSION}.tar.gz" -o mediawiki.tar.gz; \
 	echo "${MEDIAWIKI_SHA512} *mediawiki.tar.gz" | sha512sum -c -; \
-	tar -x --strip-components=1 -f mediawiki.tar.gz; \
+	tar -C /var/www/html/w -x --strip-components=1 -f mediawiki.tar.gz; \
 	rm mediawiki.tar.gz; \
-	chown -R www-data:www-data extensions skins cache images
+	chown -R www-data:www-data /var/www/html/w/images
